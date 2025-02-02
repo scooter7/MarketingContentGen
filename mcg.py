@@ -353,18 +353,24 @@ with col2:
         st.success("Cron job stopped.")
 
 # Manual blog post generation
-if st.button("Generate and Publish Blog Post", key="manual_generate_button"):
+if st.button("Generate and Preview Blog Post", key="manual_preview_button"):
     if not blog_title or not blog_topic or not keywords:
         st.error("Please fill in all fields (title, topic, and keywords) to generate a blog post.")
     else:
         with st.spinner("Generating blog content..."):
             blog_content = asyncio.run(generate_blog_content(blog_title, blog_topic, keywords))
             if blog_content:
-                published = publish_blog_post(blog_title, blog_content)
-                if published:
-                    st.success("Blog post published successfully!")
-                else:
-                    st.error("Failed to publish blog post. Check logs for details.")
+                st.success("Blog post generated successfully!")
+                # Display the blog title and content in the UI
+                st.markdown(f"## {blog_title}")
+                st.markdown(blog_content, unsafe_allow_html=True)
+                # Optional: Provide a download button for the blog post content
+                st.download_button(
+                    label="Download Blog Post",
+                    data=blog_content,
+                    file_name=f"{blog_title}.html",
+                    mime="text/html"
+                )
             else:
                 st.error("Failed to generate blog content.")
 
