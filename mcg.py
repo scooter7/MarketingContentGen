@@ -143,11 +143,15 @@ async def generate_blog_title(blog_topic, keywords):
 def publish_blog_post(blog_post_title, blog_content):
     """
     Publish the blog post to WordPress.
+    When using the Divi theme, disable the Divi Builder by adding a meta key.
     """
     post_data = {
         'title': blog_post_title,
         'content': blog_content,
-        'status': 'publish'
+        'status': 'publish',
+        'meta': {
+            'et_pb_use_builder': 'off'
+        }
     }
     try:
         response = requests.post(
