@@ -207,30 +207,36 @@ def limit_post_length(content, channel):
         return truncated
 
 def generate_social_content_with_retry(main_content, selected_channels, retries=3, delay=5):
+    """
+    Generates social media content for specified channels with retry logic.
+    Ensures emojis are preserved properly in UTF-8.
+    """
     generated_content = {}
 
     for channel in selected_channels:
-        for i in range(retries):
+        for attempt in range(retries):
             try:
+                # Explicitly request UTF-8 standard emojis in the OpenAI prompt
                 prompt = (
-                    f"Generate a {channel} post based on the following blog details:\n\n"
+                    f"Generate a {channel.capitalize()} post based on this content:\n\n"
                     f"{main_content}\n\n"
-                    "The post should be engaging and professional. Use only standard UTF-8 Unicode emojis (😊, 🚀, 🎉, etc.). "
-                    "Do not use any non-standard or extended emojis. Ensure proper rendering in plain text."
+                    "The post should be engaging, professional, and include up to 2 standard UTF-8 emojis "
+                    "(😊, 🚀, 🎉, 🔥, 🌍, etc.). Avoid using special characters that may not render correctly."
                 )
 
+                # Call OpenAI API
                 response = social_llm(prompt)
 
-                if response:  # Corrected indentation here
+                if response:
                     limited_content = limit_post_length(response.strip(), channel)
-                    try:
-                        generated_content[channel] = limited_content.encode('utf-8').decode('utf-8')  # Fix possible encoding mismatch
-                    except UnicodeDecodeError:
-                        generated_content[channel] = limited_content  # Fallback if decoding fails
-                break  # Exit retry loop if response is successful
+
+                    # ✅ FIXED: Keep text as-is to preserve emojis
+                    generated_content[channel] = limited_content 
+
+                break  # Exit retry loop on success
 
             except Exception as e:
-                if i < retries - 1:
+                if attempt < retries - 1:
                     time.sleep(delay)  # Wait before retrying
                 else:
                     generated_content[channel] = f"Error generating content: {str(e)}"
@@ -331,14 +337,15 @@ if st.button("Generate Social Media Posts", key="social_generate_button"):
 if "social_content" in st.session_state and st.session_state["social_content"]:
     for channel, content in st.session_state["social_content"].items():
         st.subheader(f"{channel} Post")
-        st.text_area(f"Generated Content for {channel}:", content.encode('utf-8', 'ignore').decode('utf-8'), height=200)
+        st.text_area(f"Generated Content for {channel}:", content, height=200)
         # Provide a download button for each channel's content
         filename = f"{channel}_post.txt"
         st.download_button(
             label=f"Download {channel} Post",
-            data=content.encode('utf-8'),
+            data=content,  # Keep text as-is
             file_name=filename,
             mime="text/plain"
         )
+
 
 
