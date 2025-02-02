@@ -20,8 +20,6 @@ llm = OpenAI(temperature=0)  # Now `llm` is globally defined
 # Environment and Logging
 # -----------------------
 
-load_dotenv()
-
 # Fetch secrets from Streamlit secrets or environment
 domain = st.secrets.get("WP_DOMAIN") or os.getenv("WP_DOMAIN")
 username = st.secrets.get("WP_USERNAME") or os.getenv("WP_USERNAME")
