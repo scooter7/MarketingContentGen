@@ -3,4 +3,6 @@ openai
 python-dotenv
 requests
 nest_asyncio
+langchain-openai
 langchain
+langchain-community
