@@ -105,8 +105,8 @@ async def generate_blog_content(blog_title, blog_topic, keywords):
     prompt = (
         f"Create a detailed 15-minute read blog post titled '{blog_title}'. "
         f"Focus on the topic: '{blog_topic}' and incorporate the following keywords: {', '.join(keywords)}. "
-        "The blog should be well-structured for developers and businesses, using proper HTML tags like <h1>, <h2>, <p>, "
-        "and <code>. Include practical examples, analysis, and applications."
+        "The blog should be well-structured for developers and businesses, using proper HTML tags like <h1>, <h2>, and <p>. "
+        "Include practical examples, analysis, and applications, but do not include any code samples."
     )
     try:
         response = client.chat.completions.create(
