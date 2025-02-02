@@ -208,6 +208,7 @@ def limit_post_length(content, channel):
 
 def generate_social_content_with_retry(main_content, selected_channels, retries=3, delay=5):
     generated_content = {}
+
     for channel in selected_channels:
         for i in range(retries):
             try:
@@ -220,12 +221,21 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
 
                 response = social_llm(prompt)
 
-                    if response:
-                        limited_content = limit_post_length(response.strip(), channel)
-                        try:
-                            generated_content[channel] = limited_content.encode('latin-1').decode('utf-8')  # Fix possible encoding mismatch
-                        except UnicodeDecodeError:
-                            generated_content[channel] = limited_content  # Fallback if decoding fails
+                if response:  # Corrected indentation here
+                    limited_content = limit_post_length(response.strip(), channel)
+                    try:
+                        generated_content[channel] = limited_content.encode('latin-1').decode('utf-8')  # Fix possible encoding mismatch
+                    except UnicodeDecodeError:
+                        generated_content[channel] = limited_content  # Fallback if decoding fails
+                break  # Exit retry loop if response is successful
+
+            except Exception as e:
+                if i < retries - 1:
+                    time.sleep(delay)  # Wait before retrying
+                else:
+                    generated_content[channel] = f"Error generating content: {str(e)}"
+
+    return generated_content
 
 # ---------------------------
 # Streamlit UI
