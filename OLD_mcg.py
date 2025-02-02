@@ -14,6 +14,15 @@ import streamlit as st
 from openai import OpenAI as OpenAICLient  # for blog post generation
 from langchain_openai import OpenAI as LangchainOpenAI  # for social post generation
 
+# Inject custom CSS to hide the toolbar with the given classes
+st.markdown("""
+    <style>
+        .stToolbarActions.st-emotion-cache-1p1m4ay.e3i9eg82 {
+            display: none !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
 # -----------------------
 # Environment and Logging
 # -----------------------
