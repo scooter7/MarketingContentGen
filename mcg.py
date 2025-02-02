@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
-import streamlit as st
-from langchain.agents import initialize_agent, load_tools, Tool, AgentType
-from langchain_openai import OpenAI  # Ensure this import is correct for your environment
+import asyncio
 import os
 import logging
+import requests
+import threading
 import time
-import unicodedata
+from datetime import datetime
+from requests.auth import HTTPBasicAuth
+from dotenv import load_dotenv
+import streamlit as st
 
-# Set up logging for debugging
-logging.basicConfig(level=logging.DEBUG)
-
-# Set environment variables
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
-
-# Initialize OpenAI model for social media content generation
-llm = OpenAI(temperature=0)  # Now `llm` is globally defined
+# Import OpenAI clients
+from openai import OpenAI  as OpenAICLient  # for blog post generation
+from langchain_openai import OpenAI as LangchainOpenAI  # for social post generation
 
 # -----------------------
 # Environment and Logging
 # -----------------------
+load_dotenv()
 
 # Fetch secrets from Streamlit secrets or environment
 domain = st.secrets.get("WP_DOMAIN") or os.getenv("WP_DOMAIN")
@@ -208,24 +207,20 @@ def limit_post_length(content, channel):
         return truncated
 
 def generate_social_content_with_retry(main_content, selected_channels, retries=3, delay=5):
-    """Generate social media content for multiple channels with retry logic."""
     generated_content = {}
     for channel in selected_channels:
         for i in range(retries):
             try:
                 prompt = (
-                    f"Generate a {channel.capitalize()} post based on this content:\n"
+                    f"Generate a {channel} post based on the following blog details:\n\n"
                     f"{main_content}\n\n"
-                    "Make sure the post is engaging and professional. Use only one or two standard Unicode emojis "
-                    "(for example: 😊, 🚀, 👍) where appropriate. Do not use any extended or non-standard emojis. "
-                    "Ensure the output is encoded in UTF-8."
+                    "The post should be engaging and professional. Use only one or two relevant, standard Unicode emojis (like 😊, 🚀, or 👍) where appropriate. Do not use any special or extended emojis. Avoid overusing emojis."
                 )
-                response = llm(prompt)  # Now llm is defined globally
+                response = social_llm(prompt)
                 if response:
-                    normalized_response = unicodedata.normalize('NFKC', response.strip())
-                    limited_content = limit_post_length(normalized_response, channel)
+                    limited_content = limit_post_length(response.strip(), channel)
                     generated_content[channel] = limited_content
-                break  # Exit the retry loop if successful
+                break
             except Exception as e:
                 if i < retries - 1:
                     time.sleep(delay)
