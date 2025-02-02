@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
-import asyncio
+import streamlit as st
+from langchain.agents import initialize_agent, load_tools, Tool, AgentType
+from langchain_openai import OpenAI  # Ensure this import is correct for your environment
 import os
 import logging
-import requests
-import threading
 import time
-from datetime import datetime
-from requests.auth import HTTPBasicAuth
-from dotenv import load_dotenv
-import streamlit as st
 import unicodedata
 
-# Import OpenAI clients
-from openai import OpenAI  as OpenAICLient  # for blog post generation
-from langchain_openai import OpenAI as LangchainOpenAI  # for social post generation
+# Set up logging for debugging
+logging.basicConfig(level=logging.DEBUG)
+
+# Set environment variables
+os.environ["SERPER_API_KEY"] = st.secrets["SERPER_API_KEY"]
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
+# Initialize OpenAI model for social media content generation
+llm = OpenAI(temperature=0)  # Now `llm` is globally defined
 
 # -----------------------
 # Environment and Logging
 # -----------------------
+
 load_dotenv()
 
 # Fetch secrets from Streamlit secrets or environment
@@ -220,13 +223,12 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
                     "(for example: 😊, 🚀, 👍) where appropriate. Do not use any extended or non-standard emojis. "
                     "Ensure the output is encoded in UTF-8."
                 )
-                response = llm(prompt)
+                response = llm(prompt)  # Now llm is defined globally
                 if response:
-                    # Normalize Unicode to help resolve encoding issues with emojis
                     normalized_response = unicodedata.normalize('NFKC', response.strip())
                     limited_content = limit_post_length(normalized_response, channel)
                     generated_content[channel] = limited_content
-                break  # If successful, break out of the retry loop
+                break  # Exit the retry loop if successful
             except Exception as e:
                 if i < retries - 1:
                     time.sleep(delay)
