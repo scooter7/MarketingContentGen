@@ -216,9 +216,10 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
                 prompt = (
                     f"Generate a {channel} post based on the following blog details:\n\n"
                     f"{main_content}\n\n"
-                    "The post should be engaging, professional, and adhere to the platform's character limit."
+                    "The post should be engaging and professional, adhere to the platform's character limit, "
+                    "and use only one or two relevant emojis where appropriate. Avoid overusing emojis or "
+                    "using any that might not render correctly. Ensure the emojis used are standard Unicode symbols."
                 )
-                # Using LangChain's LLM call
                 response = social_llm(prompt)
                 if response:
                     limited_content = limit_post_length(response.strip(), channel)
@@ -230,7 +231,7 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
                 else:
                     generated_content[channel] = f"Error generating content: {str(e)}"
     return generated_content
-
+    
 # ---------------------------
 # Streamlit UI
 # ---------------------------
