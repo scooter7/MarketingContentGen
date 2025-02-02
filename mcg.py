@@ -19,6 +19,16 @@ from langchain_openai import OpenAI as LangchainOpenAI  # for social post genera
 # -----------------------
 load_dotenv()
 
+st.markdown(
+    """
+    <style>
+    .st-emotion-cache-12fmjuu.ezrtsby2 {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # Fetch secrets from Streamlit secrets or environment
 domain = st.secrets.get("WP_DOMAIN") or os.getenv("WP_DOMAIN")
 username = st.secrets.get("WP_USERNAME") or os.getenv("WP_USERNAME")
