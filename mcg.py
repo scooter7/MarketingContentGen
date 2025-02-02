@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import asyncio
 import os
 import logging
@@ -206,9 +207,6 @@ def limit_post_length(content, channel):
         return truncated
 
 def generate_social_content_with_retry(main_content, selected_channels, retries=3, delay=5):
-    """
-    Generate social media posts for multiple channels using retry logic.
-    """
     generated_content = {}
     for channel in selected_channels:
         for i in range(retries):
@@ -216,9 +214,7 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
                 prompt = (
                     f"Generate a {channel} post based on the following blog details:\n\n"
                     f"{main_content}\n\n"
-                    "The post should be engaging and professional, adhere to the platform's character limit, "
-                    "and use only one or two relevant emojis where appropriate. Avoid overusing emojis or "
-                    "using any that might not render correctly. Ensure the emojis used are standard Unicode symbols."
+                    "The post should be engaging and professional. Use only one or two relevant, standard Unicode emojis (like 😊, 🚀, or 👍) where appropriate. Do not use any special or extended emojis. Avoid overusing emojis."
                 )
                 response = social_llm(prompt)
                 if response:
