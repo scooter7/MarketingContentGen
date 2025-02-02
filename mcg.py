@@ -243,39 +243,42 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
     return generated_content
 
 # ---------------------------
-# Weekly Content Plan Chatbot Function
-# ---------------------------
-async def generate_weekly_content_plan(business_plan: str) -> str:
-    """
-    Generate a weekly content plan (blog and social media recommendations)
-    based on the provided business plan.
-    """
-    prompt = (
-        "You are an experienced content strategist. Based on the following business plan, "
-        "generate a detailed weekly content plan for both blogging and social media. For each day of the week, "
-        "provide a recommendation that includes a blog post title, blog post topic, and a list of relevant keywords. "
-        "Also include ideas for accompanying social media posts (platform-specific if possible). "
-        "Make sure the recommendations are actionable and clearly formatted.\n\n"
-        f"Business Plan: {business_plan}"
-    )
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{'role': 'user', 'content': prompt}]
-        )
-        plan = response.choices[0].message.content
-        logging.info("Generated weekly content plan.")
-        return plan
-    except Exception as e:
-        logging.error("Failed to generate weekly content plan: %s", str(e))
-        return f"Error generating weekly content plan: {str(e)}"
-
-# ---------------------------
-# Streamlit UI
+# Weekly Content Plan Chatbot Section (Moved to the Top)
 # ---------------------------
 st.title("Automated WordPress Blog & Social Media Post Creator")
+st.header("Weekly Content Plan Chatbot")
+st.markdown(
+    "Enter your business plan below. The chatbot will generate a weekly content plan with recommendations "
+    "for blog posts (title, topic, keywords) and social media posts."
+)
+# Increase the text area size with a higher 'height' value (adjust as needed)
+business_plan = st.text_area("Business Plan:", placeholder="Type your business plan here...", height=300)
 
-# --- Blog Post Section ---
+if st.button("Generate Weekly Content Plan", key="generate_weekly_plan_button"):
+    if not business_plan.strip():
+        st.error("Please enter a valid business plan.")
+    else:
+        with st.spinner("Generating weekly content plan..."):
+            weekly_plan = asyncio.run(
+                # Generate weekly content plan using the business plan
+                generate_weekly_content_plan(business_plan)
+            )
+            st.session_state["weekly_plan"] = weekly_plan
+            st.success("Weekly content plan generated!")
+
+if "weekly_plan" in st.session_state:
+    st.subheader("Your Weekly Content Plan")
+    st.text_area("Weekly Content Plan:", st.session_state["weekly_plan"], height=400)
+    st.download_button(
+        label="Download Weekly Content Plan",
+        data=st.session_state["weekly_plan"],
+        file_name="weekly_content_plan.txt",
+        mime="text/plain"
+    )
+
+# ---------------------------
+# Blog Post Section
+# ---------------------------
 st.header("Blog Post Creator")
 
 # Display Cron Job Status
@@ -319,7 +322,6 @@ if st.button("Generate and Publish Blog Post", key="manual_generate_button"):
         st.error("Please fill in all fields (title, topic, and keywords) to generate a blog post.")
     else:
         with st.spinner("Generating blog content..."):
-            # Generate blog content asynchronously
             blog_content = asyncio.run(generate_blog_content(blog_title, blog_topic, keywords))
             if blog_content:
                 published = publish_blog_post(blog_title, blog_content)
@@ -330,10 +332,10 @@ if st.button("Generate and Publish Blog Post", key="manual_generate_button"):
             else:
                 st.error("Failed to generate blog content.")
 
-# --- Social Media Post Section ---
+# ---------------------------
+# Social Media Post Section
+# ---------------------------
 st.header("Social Media Post Generator")
-
-# For social media, we re-use the blog title, topic, and keywords to create a “main content” prompt.
 st.markdown("Based on your blog details, generate social media posts for selected platforms.")
 
 # Select which social channels to generate posts for
@@ -350,7 +352,6 @@ if st.button("Generate Social Media Posts", key="social_generate_button"):
         st.error("Please select at least one social media channel.")
     else:
         with st.spinner("Generating social media posts..."):
-            # Prepare a main content prompt (you can adjust this to include more details if desired)
             main_content = (
                 f"Blog Title: {blog_title}\n"
                 f"Blog Topic: {blog_topic}\n"
@@ -360,12 +361,10 @@ if st.button("Generate Social Media Posts", key="social_generate_button"):
             st.session_state["social_content"] = social_posts
             st.success("Social media posts generated!")
 
-# Display generated social media posts (if any)
 if "social_content" in st.session_state and st.session_state["social_content"]:
     for channel, content in st.session_state["social_content"].items():
         st.subheader(f"{channel} Post")
         st.text_area(f"Generated Content for {channel}:", content, height=200)
-        # Provide a download button for each channel's content
         filename = f"{channel}_post.txt"
         st.download_button(
             label=f"Download {channel} Post",
@@ -374,28 +373,30 @@ if "social_content" in st.session_state and st.session_state["social_content"]:
             mime="text/plain"
         )
 
-# --- Weekly Content Plan Chatbot Section ---
-st.header("Weekly Content Plan Chatbot")
-st.markdown("Enter your business plan below. The chatbot will generate a weekly content plan with recommendations for blog posts (title, topic, keywords) and social media posts.")
-
-business_plan = st.text_area("Business Plan:",
-                             placeholder="Type your business plan here...")
-
-if st.button("Generate Weekly Content Plan", key="generate_weekly_plan_button"):
-    if not business_plan.strip():
-        st.error("Please enter a valid business plan.")
-    else:
-        with st.spinner("Generating weekly content plan..."):
-            weekly_plan = asyncio.run(generate_weekly_content_plan(business_plan))
-            st.session_state["weekly_plan"] = weekly_plan
-            st.success("Weekly content plan generated!")
-
-if "weekly_plan" in st.session_state:
-    st.subheader("Your Weekly Content Plan")
-    st.text_area("Weekly Content Plan:", st.session_state["weekly_plan"], height=400)
-    st.download_button(
-        label="Download Weekly Content Plan",
-        data=st.session_state["weekly_plan"],
-        file_name="weekly_content_plan.txt",
-        mime="text/plain"
+# ---------------------------
+# Weekly Content Plan Chatbot Helper Function
+# ---------------------------
+async def generate_weekly_content_plan(business_plan: str) -> str:
+    """
+    Generate a weekly content plan (blog and social media recommendations)
+    based on the provided business plan.
+    """
+    prompt = (
+        "You are an experienced content strategist. Based on the following business plan, "
+        "generate a detailed weekly content plan for both blogging and social media. For each day of the week, "
+        "provide a recommendation that includes a blog post title, blog post topic, and a list of relevant keywords. "
+        "Also include ideas for accompanying social media posts (platform-specific if possible). "
+        "Make sure the recommendations are actionable and clearly formatted.\n\n"
+        f"Business Plan: {business_plan}"
     )
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+        plan = response.choices[0].message.content
+        logging.info("Generated weekly content plan.")
+        return plan
+    except Exception as e:
+        logging.error("Failed to generate weekly content plan: %s", str(e))
+        return f"Error generating weekly content plan: {str(e)}"
