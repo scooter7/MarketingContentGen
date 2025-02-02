@@ -105,8 +105,8 @@ async def generate_blog_content(blog_title, blog_topic, keywords):
     prompt = (
         f"Create a detailed 15-minute read blog post titled '{blog_title}'. "
         f"Focus on the topic: '{blog_topic}' and incorporate the following keywords: {', '.join(keywords)}. "
-        "The blog should be well-structured for developers and businesses, using proper HTML tags like <h1>, <h2>, and <p>. "
-        "Include practical examples, analysis, and applications, but do not include any code samples."
+        "The blog should be well-structured for developers and businesses, using markdown formatting for headings and text (e.g., use '#' for headings). "
+        "Include practical examples, analysis, and applications. Do not include any HTML code in the output, only plain text with markdown formatting."
     )
     try:
         response = client.chat.completions.create(
@@ -361,15 +361,14 @@ if st.button("Generate and Preview Blog Post", key="manual_preview_button"):
             blog_content = asyncio.run(generate_blog_content(blog_title, blog_topic, keywords))
             if blog_content:
                 st.success("Blog post generated successfully!")
-                # Display the blog title and content in the UI
-                st.markdown(f"## {blog_title}")
-                st.markdown(blog_content, unsafe_allow_html=True)
-                # Optional: Provide a download button for the blog post content
+                # Display the plain text blog post preview
+                st.text_area("Blog Post Preview:", blog_content, height=400)
+                # Provide a download button for the plain text blog post
                 st.download_button(
                     label="Download Blog Post",
                     data=blog_content,
-                    file_name=f"{blog_title}.html",
-                    mime="text/html"
+                    file_name=f"{blog_title}.txt",
+                    mime="text/plain"
                 )
             else:
                 st.error("Failed to generate blog content.")
