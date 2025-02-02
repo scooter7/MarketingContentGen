@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import streamlit as st
 
 # Import OpenAI clients
-from openai import OpenAI  as OpenAICLient  # for blog post generation
+from openai import OpenAI as OpenAICLient  # for blog post generation
 from langchain_openai import OpenAI as LangchainOpenAI  # for social post generation
 
 # -----------------------
@@ -229,7 +229,6 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
 
                 if response:
                     limited_content = limit_post_length(response.strip(), channel)
-
                     # ✅ FIXED: Keep text as-is to preserve emojis
                     generated_content[channel] = limited_content 
 
@@ -242,6 +241,34 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
                     generated_content[channel] = f"Error generating content: {str(e)}"
 
     return generated_content
+
+# ---------------------------
+# Weekly Content Plan Chatbot Function
+# ---------------------------
+async def generate_weekly_content_plan(business_plan: str) -> str:
+    """
+    Generate a weekly content plan (blog and social media recommendations)
+    based on the provided business plan.
+    """
+    prompt = (
+        "You are an experienced content strategist. Based on the following business plan, "
+        "generate a detailed weekly content plan for both blogging and social media. For each day of the week, "
+        "provide a recommendation that includes a blog post title, blog post topic, and a list of relevant keywords. "
+        "Also include ideas for accompanying social media posts (platform-specific if possible). "
+        "Make sure the recommendations are actionable and clearly formatted.\n\n"
+        f"Business Plan: {business_plan}"
+    )
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+        plan = response.choices[0].message.content
+        logging.info("Generated weekly content plan.")
+        return plan
+    except Exception as e:
+        logging.error("Failed to generate weekly content plan: %s", str(e))
+        return f"Error generating weekly content plan: {str(e)}"
 
 # ---------------------------
 # Streamlit UI
@@ -342,10 +369,33 @@ if "social_content" in st.session_state and st.session_state["social_content"]:
         filename = f"{channel}_post.txt"
         st.download_button(
             label=f"Download {channel} Post",
-            data=content,  # Keep text as-is
+            data=content,
             file_name=filename,
             mime="text/plain"
         )
 
+# --- Weekly Content Plan Chatbot Section ---
+st.header("Weekly Content Plan Chatbot")
+st.markdown("Enter your business plan below. The chatbot will generate a weekly content plan with recommendations for blog posts (title, topic, keywords) and social media posts.")
 
+business_plan = st.text_area("Business Plan:",
+                             placeholder="Type your business plan here...")
 
+if st.button("Generate Weekly Content Plan", key="generate_weekly_plan_button"):
+    if not business_plan.strip():
+        st.error("Please enter a valid business plan.")
+    else:
+        with st.spinner("Generating weekly content plan..."):
+            weekly_plan = asyncio.run(generate_weekly_content_plan(business_plan))
+            st.session_state["weekly_plan"] = weekly_plan
+            st.success("Weekly content plan generated!")
+
+if "weekly_plan" in st.session_state:
+    st.subheader("Your Weekly Content Plan")
+    st.text_area("Weekly Content Plan:", st.session_state["weekly_plan"], height=400)
+    st.download_button(
+        label="Download Weekly Content Plan",
+        data=st.session_state["weekly_plan"],
+        file_name="weekly_content_plan.txt",
+        mime="text/plain"
+    )
