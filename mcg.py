@@ -1,23 +1,4 @@
-# -*- coding: utf-8 -*-
-import asyncio
-import os
-import logging
-import requests
-import threading
-import time
-from datetime import datetime
-from requests.auth import HTTPBasicAuth
-from dotenv import load_dotenv
-import streamlit as st
 
-# Import OpenAI clients
-from openai import OpenAI as OpenAICLient  # for blog post generation
-from langchain_openai import OpenAI as LangchainOpenAI  # for social post generation
-
-# -----------------------
-# Environment and Logging
-# -----------------------
-load_dotenv()
 
 st.markdown(
     """
