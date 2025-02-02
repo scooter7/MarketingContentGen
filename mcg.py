@@ -11,7 +11,6 @@ import unicodedata
 logging.basicConfig(level=logging.DEBUG)
 
 # Set environment variables
-os.environ["SERPER_API_KEY"] = st.secrets["SERPER_API_KEY"]
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 # Initialize OpenAI model for social media content generation
