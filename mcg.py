@@ -9,6 +9,7 @@ from datetime import datetime
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 import streamlit as st
+import unicodedata
 
 # Import OpenAI clients
 from openai import OpenAI  as OpenAICLient  # for blog post generation
@@ -207,20 +208,25 @@ def limit_post_length(content, channel):
         return truncated
 
 def generate_social_content_with_retry(main_content, selected_channels, retries=3, delay=5):
+    """Generate social media content for multiple channels with retry logic."""
     generated_content = {}
     for channel in selected_channels:
         for i in range(retries):
             try:
                 prompt = (
-                    f"Generate a {channel} post based on the following blog details:\n\n"
+                    f"Generate a {channel.capitalize()} post based on this content:\n"
                     f"{main_content}\n\n"
-                    "The post should be engaging and professional. Use only one or two relevant, standard Unicode emojis (like 😊, 🚀, or 👍) where appropriate. Do not use any special or extended emojis. Avoid overusing emojis."
+                    "Make sure the post is engaging and professional. Use only one or two standard Unicode emojis "
+                    "(for example: 😊, 🚀, 👍) where appropriate. Do not use any extended or non-standard emojis. "
+                    "Ensure the output is encoded in UTF-8."
                 )
-                response = social_llm(prompt)
+                response = llm(prompt)
                 if response:
-                    limited_content = limit_post_length(response.strip(), channel)
+                    # Normalize Unicode to help resolve encoding issues with emojis
+                    normalized_response = unicodedata.normalize('NFKC', response.strip())
+                    limited_content = limit_post_length(normalized_response, channel)
                     generated_content[channel] = limited_content
-                break
+                break  # If successful, break out of the retry loop
             except Exception as e:
                 if i < retries - 1:
                     time.sleep(delay)
