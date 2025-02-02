@@ -105,8 +105,8 @@ async def generate_blog_content(blog_title, blog_topic, keywords):
     prompt = (
         f"Create a detailed 15-minute read blog post titled '{blog_title}'. "
         f"Focus on the topic: '{blog_topic}' and incorporate the following keywords: {', '.join(keywords)}. "
-        "The blog should be well-structured for developers and businesses, using proper HTML tags like <h1>, <h2>, <p>, "
-        "and <code>. Include practical examples, analysis, and applications."
+        "The blog should be well-structured for developers and businesses, using proper HTML tags like <h1>, <h2>, and <p>. "
+        "Include practical examples, analysis, and applications, but do not include any code samples."
     )
     try:
         response = client.chat.completions.create(
@@ -246,19 +246,18 @@ def limit_post_length(content, channel):
 def generate_social_content_with_retry(main_content, selected_channels, retries=3, delay=5):
     """
     Generates social media content for specified channels with retry logic.
-    Ensures emojis are preserved properly in UTF-8.
+    Emoji generation has been removed.
     """
     generated_content = {}
 
     for channel in selected_channels:
         for attempt in range(retries):
             try:
-                # Explicitly request UTF-8 standard emojis in the OpenAI prompt
+                # Modified prompt without emoji generation
                 prompt = (
                     f"Generate a {channel.capitalize()} post based on this content:\n\n"
                     f"{main_content}\n\n"
-                    "The post should be engaging, professional, and include up to 2 standard UTF-8 emojis "
-                    "(😊, 🚀, 🎉, 🔥, 🌍, etc.). Avoid using special characters that may not render correctly."
+                    "The post should be engaging and professional. Please do not include any emojis."
                 )
 
                 # Call OpenAI API
@@ -266,7 +265,6 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
 
                 if response:
                     limited_content = limit_post_length(response.strip(), channel)
-                    # Keep text as-is to preserve emojis
                     generated_content[channel] = limited_content 
 
                 break  # Exit retry loop on success
