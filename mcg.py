@@ -1,15 +1,33 @@
+# -*- coding: utf-8 -*-
+import asyncio
+import os
+import logging
+import requests
+import threading
+import time
+from datetime import datetime
+from requests.auth import HTTPBasicAuth
+from dotenv import load_dotenv
+import streamlit as st
 
+# Import OpenAI clients
+from openai import OpenAI as OpenAICLient  # for blog post generation
+from langchain_openai import OpenAI as LangchainOpenAI  # for social post generation
 
-st.markdown(
-    """
+# Inject custom CSS to hide the toolbar with the given classes
+st.markdown("""
     <style>
-    .st-emotion-cache-12fmjuu.ezrtsby2 {
-        display: none;
-    }
+        .stToolbarActions.st-emotion-cache-1p1m4ay.e3i9eg82 {
+            display: none !important;
+        }
     </style>
-    """,
-    unsafe_allow_html=True
-)
+    """, unsafe_allow_html=True)
+
+# -----------------------
+# Environment and Logging
+# -----------------------
+load_dotenv()
+
 # Fetch secrets from Streamlit secrets or environment
 domain = st.secrets.get("WP_DOMAIN") or os.getenv("WP_DOMAIN")
 username = st.secrets.get("WP_USERNAME") or os.getenv("WP_USERNAME")
