@@ -214,23 +214,19 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
                 prompt = (
                     f"Generate a {channel} post based on the following blog details:\n\n"
                     f"{main_content}\n\n"
-                    "The post should be engaging and professional. Use only standard UTF-8 Unicode emojis (😊, 🚀, 👍, etc.). "
-                    "Avoid using special or extended emojis that may not render correctly."
+                    "The post should be engaging and professional. Use only standard UTF-8 Unicode emojis (😊, 🚀, 🎉, etc.). "
+                    "Do not use any non-standard or extended emojis. Ensure proper rendering in plain text."
                 )
 
                 response = social_llm(prompt)
-                if response:
-                    limited_content = limit_post_length(response.strip(), channel)
-                    generated_content[channel] = limited_content.encode('utf-8').decode('utf-8')  # Ensure correct encoding
 
-                break
-            except Exception as e:
-                if i < retries - 1:
-                    time.sleep(delay)
-                else:
-                    generated_content[channel] = f"Error generating content: {str(e)}"
-    return generated_content
-    
+                    if response:
+                        limited_content = limit_post_length(response.strip(), channel)
+                        try:
+                            generated_content[channel] = limited_content.encode('latin-1').decode('utf-8')  # Fix possible encoding mismatch
+                        except UnicodeDecodeError:
+                            generated_content[channel] = limited_content  # Fallback if decoding fails
+
 # ---------------------------
 # Streamlit UI
 # ---------------------------
@@ -325,13 +321,14 @@ if st.button("Generate Social Media Posts", key="social_generate_button"):
 if "social_content" in st.session_state and st.session_state["social_content"]:
     for channel, content in st.session_state["social_content"].items():
         st.subheader(f"{channel} Post")
-        st.text_area(f"Generated Content for {channel}:", content.encode('utf-8').decode('utf-8'), height=200)
+        st.text_area(f"Generated Content for {channel}:", content.encode('utf-8', 'ignore').decode('utf-8'), height=200)
         # Provide a download button for each channel's content
         filename = f"{channel}_post.txt"
         st.download_button(
             label=f"Download {channel} Post",
-            data=content.encode('utf-8').decode('utf-8'),
+            data=content.encode('utf-8'),
             file_name=filename,
             mime="text/plain"
         )
+
 
