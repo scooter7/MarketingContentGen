@@ -224,7 +224,7 @@ def generate_social_content_with_retry(main_content, selected_channels, retries=
                 if response:  # Corrected indentation here
                     limited_content = limit_post_length(response.strip(), channel)
                     try:
-                        generated_content[channel] = limited_content.encode('latin-1').decode('utf-8')  # Fix possible encoding mismatch
+                        generated_content[channel] = limited_content.encode('utf-8').decode('utf-8')  # Fix possible encoding mismatch
                     except UnicodeDecodeError:
                         generated_content[channel] = limited_content  # Fallback if decoding fails
                 break  # Exit retry loop if response is successful
